@@ -213,6 +213,10 @@ export const Tokens: { [network: number]: { [symbol: string]: Token } } = {
       address: '0x8f4063446f5011bc1c9f79a819efe87776f23704',
       decimals: 18,
     },
+    IBEUR: {
+      address: '0x96E61422b6A9bA0e068B6c5ADd4fFaBC6a4aae27',
+      decimals: 18,
+    },
   },
   [Network.ROPSTEN]: {
     DAI: {

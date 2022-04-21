@@ -21,17 +21,20 @@ import { Tokens } from '../../../tests/constants-e2e';
   logic.
 
   You can run this individual test script by running:
-  `npx jest src/dex/<dex-name>/<dex-name>-integration.test.ts`
+  `npx jest src/dex/ib-amm/ib-amm-integration.test.ts`
 
   (This comment should be removed from the final implementation)
 */
 
 const network = Network.MAINNET;
-const TokenASymbol = 'TokenASymbol';
-const TokenA = Tokens[network][TokenASymbol];
+const DAI_SYMBOL = 'DAI';
+const DAI = Tokens[network][DAI_SYMBOL];
 
-const TokenBSymbol = 'TokenBSymbol';
-const TokenB = Tokens[network][TokenBSymbol];
+const IBEUR_SYMBOL = 'IBEUR';
+const IBEUR = Tokens[network][IBEUR_SYMBOL];
+
+const MIM_SYMBOL = 'MIM';
+const MIM = Tokens[network][MIM_SYMBOL];
 
 const amounts = [
   BigInt('0'),
@@ -50,31 +53,33 @@ describe('IbAmm', function () {
     await ibAmm.initializePricing(blocknumber);
 
     const pools = await ibAmm.getPoolIdentifiers(
-      TokenA,
-      TokenB,
+      IBEUR,
+      MIM,
       SwapSide.SELL,
       blocknumber,
     );
-    console.log(`${TokenASymbol} <> ${TokenBSymbol} Pool Identifiers: `, pools);
+    console.log(`${IBEUR_SYMBOL} <> ${MIM_SYMBOL} Pool Identifiers: `, pools);
 
     expect(pools.length).toBeGreaterThan(0);
 
     const poolPrices = await ibAmm.getPricesVolume(
-      TokenA,
-      TokenB,
+      IBEUR,
+      MIM,
       amounts,
       SwapSide.SELL,
       blocknumber,
       pools,
     );
-    console.log(`${TokenASymbol} <> ${TokenBSymbol} Pool Prices: `, poolPrices);
+    console.log(`${IBEUR_SYMBOL} <> ${MIM_SYMBOL} Pool Prices: `, poolPrices);
 
     expect(poolPrices).not.toBeNull();
     if (ibAmm.hasConstantPriceLargeAmounts) {
+      console.count('🔥');
       checkConstantPoolPrices(poolPrices!, amounts, dexKey);
     } else {
       checkPoolPrices(poolPrices!, amounts, SwapSide.SELL, dexKey);
     }
+    console.count('🔥');
   });
 
   it('getPoolIdentifiers and getPricesVolume BUY', async function () {
@@ -85,24 +90,24 @@ describe('IbAmm', function () {
     await ibAmm.initializePricing(blocknumber);
 
     const pools = await ibAmm.getPoolIdentifiers(
-      TokenA,
-      TokenB,
+      DAI,
+      IBEUR,
       SwapSide.BUY,
       blocknumber,
     );
-    console.log(`${TokenASymbol} <> ${TokenBSymbol} Pool Identifiers: `, pools);
+    console.log(`${DAI_SYMBOL} <> ${IBEUR_SYMBOL} Pool Identifiers: `, pools);
 
     expect(pools.length).toBeGreaterThan(0);
 
     const poolPrices = await ibAmm.getPricesVolume(
-      TokenA,
-      TokenB,
+      DAI,
+      IBEUR,
       amounts,
       SwapSide.BUY,
       blocknumber,
       pools,
     );
-    console.log(`${TokenASymbol} <> ${TokenBSymbol} Pool Prices: `, poolPrices);
+    console.log(`${DAI_SYMBOL} <> ${IBEUR_SYMBOL} Pool Prices: `, poolPrices);
 
     expect(poolPrices).not.toBeNull();
     if (ibAmm.hasConstantPriceLargeAmounts) {
@@ -116,11 +121,11 @@ describe('IbAmm', function () {
     const dexHelper = new DummyDexHelper(network);
     const ibAmm = new IbAmm(network, dexKey, dexHelper);
 
-    const poolLiquidity = await ibAmm.getTopPoolsForToken(TokenA.address, 10);
-    console.log(`${TokenASymbol} Top Pools:`, poolLiquidity);
+    const poolLiquidity = await ibAmm.getTopPoolsForToken(DAI.address, 10);
+    console.log(`${DAI_SYMBOL} Top Pools:`, poolLiquidity);
 
     if (!ibAmm.hasConstantPriceLargeAmounts) {
-      checkPoolsLiquidity(poolLiquidity, TokenA.address, dexKey);
+      checkPoolsLiquidity(poolLiquidity, DAI.address, dexKey);
     }
   });
 });

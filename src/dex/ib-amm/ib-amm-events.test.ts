@@ -1,90 +1,90 @@
-import dotenv from 'dotenv';
-dotenv.config();
+// import dotenv from 'dotenv';
+// dotenv.config();
 
-import { IbAmmEventPool } from './ib-amm';
-import { IbAmmConfig } from './config';
-import { Network } from '../../constants';
-import { DummyDexHelper } from '../../dex-helper/index';
-import { testEventSubscriber } from '../../../tests/utils-events';
-import { PoolState } from './types';
-import axios from 'axios';
+// import { IbAmmEventPool } from './ib-amm';
+// import { IbAmmConfig } from './config';
+// import { Network } from '../../constants';
+// import { DummyDexHelper } from '../../dex-helper/index';
+// import { testEventSubscriber } from '../../../tests/utils-events';
+// import { PoolState } from './types';
+// import axios from 'axios';
 
-/*
-  README
-  ======
+// /*
+//   README
+//   ======
 
-  This test script adds unit tests for IbAmm event based 
-  system. This is done by fetching the state on-chain before the 
-  event block, manually pushing the block logs to the event-subsriber, 
-  comparing the local state with on-chain state. 
+//   This test script adds unit tests for IbAmm event based
+//   system. This is done by fetching the state on-chain before the
+//   event block, manually pushing the block logs to the event-subsriber,
+//   comparing the local state with on-chain state.
 
-  Most of the logic for testing is abstracted by `testEventSubscriber`.
-  You need to do two things to make the tests work: 
-  
-  1. Fetch the block numbers where certain events were released. You
-  can modify the `./scripts/fetch-event-blocknumber.ts` to get the 
-  blocknumbers for different events. Make sure to get sufficient
-  number of blockNumbers to cover all possible cases for the event
-  mutations. 
+//   Most of the logic for testing is abstracted by `testEventSubscriber`.
+//   You need to do two things to make the tests work:
 
-  2. Complete the implementation for fetchPoolState function. The 
-  function should fetch the on-chain state of the event subscriber 
-  using just the blocknumber. 
+//   1. Fetch the block numbers where certain events were released. You
+//   can modify the `./scripts/fetch-event-blocknumber.ts` to get the
+//   blocknumbers for different events. Make sure to get sufficient
+//   number of blockNumbers to cover all possible cases for the event
+//   mutations.
 
-  The template tests only include the test for a single event 
-  subscriber. There can be cases where multiple event subscribers 
-  exist for a single DEX. In such cases additional tests should be 
-  added.  
+//   2. Complete the implementation for fetchPoolState function. The
+//   function should fetch the on-chain state of the event subscriber
+//   using just the blocknumber.
 
-  You can run this individual test script by running:
-  `npx jest src/dex/<dex-name>/<dex-name>-events.test.ts`
+//   The template tests only include the test for a single event
+//   subscriber. There can be cases where multiple event subscribers
+//   exist for a single DEX. In such cases additional tests should be
+//   added.
 
-  (This comment should be removed from the final implementation)
-*/
+//   You can run this individual test script by running:
+//   `npx jest src/dex/<dex-name>/<dex-name>-events.test.ts`
 
-jest.setTimeout(50 * 1000);
-const dexKey = 'IbAmm';
-const network = Network.MAINNET;
-const config = IbAmmConfig[dexKey][network];
+//   (This comment should be removed from the final implementation)
+// */
 
-async function fetchPoolState(
-  ibAmmPools: IbAmmEventPool,
-  blockNumber: number,
-  poolAddress: string,
-): Promise<PoolState> {
-  // TODO: complete me!
-}
+// jest.setTimeout(50 * 1000);
+// const dexKey = 'IbAmm';
+// const network = Network.MAINNET;
+// const config = IbAmmConfig[dexKey][network];
 
-describe('IbAmm Event', function () {
-  const blockNumbers: { [eventName: string]: number[] } = {
-    // TODO: complete me!
-  };
+// async function fetchPoolState(
+//   ibAmmPools: IbAmmEventPool,
+//   blockNumber: number,
+//   poolAddress: string,
+// ): Promise<PoolState> {
+//   // TODO: complete me!
+// }
 
-  describe('IbAmmEventPool', function () {
-    Object.keys(blockNumbers).forEach((event: string) => {
-      blockNumbers[event].forEach((blockNumber: number) => {
-        it(`Should return the correct state after the ${blockNumber}:${event}`, async function () {
-          const dexHelper = new DummyDexHelper(network);
-          const logger = dexHelper.getLogger(dexKey);
+// describe('IbAmm Event', function () {
+//   const blockNumbers: { [eventName: string]: number[] } = {
+//     // TODO: complete me!
+//   };
 
-          const ibAmmPools = new IbAmmEventPool(
-            dexKey,
-            network,
-            dexHelper,
-            logger,
-          );
+//   describe('IbAmmEventPool', function () {
+//     Object.keys(blockNumbers).forEach((event: string) => {
+//       blockNumbers[event].forEach((blockNumber: number) => {
+//         it(`Should return the correct state after the ${blockNumber}:${event}`, async function () {
+//           const dexHelper = new DummyDexHelper(network);
+//           const logger = dexHelper.getLogger(dexKey);
 
-          await testEventSubscriber(
-            ibAmmPools,
-            ibAmmPools.addressesSubscribed,
-            (_blockNumber: number) =>
-              fetchPoolState(ibAmmPools, _blockNumber, poolAddress),
-            blockNumber,
-            `${dexKey}_${poolAddress}`,
-            dexHelper.provider,
-          );
-        });
-      });
-    });
-  });
-});
+//           const ibAmmPools = new IbAmmEventPool(
+//             dexKey,
+//             network,
+//             dexHelper,
+//             logger,
+//           );
+
+//           await testEventSubscriber(
+//             ibAmmPools,
+//             ibAmmPools.addressesSubscribed,
+//             (_blockNumber: number) =>
+//               fetchPoolState(ibAmmPools, _blockNumber, poolAddress),
+//             blockNumber,
+//             `${dexKey}_${poolAddress}`,
+//             dexHelper.provider,
+//           );
+//         });
+//       });
+//     });
+//   });
+// });
