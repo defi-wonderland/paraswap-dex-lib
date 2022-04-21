@@ -203,9 +203,9 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
         : ibammContract.sell_quote;
     const token = side === SwapSide.BUY ? to.address : from.address;
 
-    const unit: bigint = await quote(token, unitAmount);
+    const unit: bigint = BigInt(await quote(token, unitAmount));
     const prices: bigint[] = await Promise.all(
-      amounts.map(amount => quote(token, amount)),
+      amounts.map(async amount => BigInt(await quote(token, amount))),
     );
 
     return [
