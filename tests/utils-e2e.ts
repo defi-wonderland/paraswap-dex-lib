@@ -199,14 +199,13 @@ export async function testE2E(
   }
 
   const useAPI = testingEndpoint && !poolIdentifiers;
+
   // The API currently doesn't allow for specifying poolIdentifiers
   const paraswap: IParaSwapSDK = useAPI
     ? new APIParaswapSDK(network, dexKey)
     : new LocalParaswapSDK(network, dexKey);
 
   if (paraswap.initializePricing) await paraswap.initializePricing();
-
-  console.log(poolIdentifiers);
 
   const priceRoute = await paraswap.getPrices(
     srcToken,
@@ -216,6 +215,7 @@ export async function testE2E(
     contractMethod,
     poolIdentifiers,
   );
+
   expect(parseFloat(priceRoute.destAmount)).toBeGreaterThan(0);
 
   // Slippage to be 7%
@@ -223,6 +223,7 @@ export async function testE2E(
     (swapSide === SwapSide.SELL
       ? BigInt(priceRoute.destAmount) * BigInt(93)
       : BigInt(priceRoute.srcAmount) * BigInt(107)) / BigInt(100);
+
   const swapParams = await paraswap.buildTransaction(
     priceRoute,
     minMaxAmount,
@@ -230,6 +231,7 @@ export async function testE2E(
   );
 
   const swapTx = await ts.simulate(swapParams);
+
   console.log(`${srcToken.address}_${destToken.address}_${dexKey!}`);
   // Only log gas estimate if testing against API
   if (useAPI)
@@ -241,5 +243,6 @@ export async function testE2E(
       }`,
     );
   console.log(`Tenderly URL: ${swapTx!.tenderlyUrl}`);
+
   expect(swapTx!.success).toEqual(true);
 }

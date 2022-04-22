@@ -155,7 +155,7 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
   // Returns the list of contract adapters (name and index)
   // for a buy/sell. Return null if there are no adapters.
   getAdapters(side: SwapSide): { name: string; index: number }[] | null {
-    return this.adapters[side];
+    return null;
   }
 
   async getPoolIdentifiers(
