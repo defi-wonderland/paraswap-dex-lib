@@ -134,11 +134,11 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
     if (side === SwapSide.BUY) {
       if (toLC(from.address) !== toLC(this.config.DAI)) return false;
 
-      if (!IB_TOKENS.find(a => toLC(a) === toLC(to.address))) return false;
+      if (IB_TOKENS.every(a => toLC(a) !== toLC(to.address))) return false;
     } else {
       if (toLC(to.address) !== toLC(this.config.MIM)) return false;
 
-      if (!IB_TOKENS.find(a => toLC(a) === toLC(from.address))) return false;
+      if (IB_TOKENS.every(a => toLC(a) !== toLC(from.address))) return false;
     }
 
     return true;
@@ -164,7 +164,8 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
     side: SwapSide,
     blockNumber: number,
   ): Promise<string[]> {
-    if (!this.poolExists(from, to, side)) [];
+    console.log('🇦🇷');
+    // if (!this.poolExists(from, to, side)) [];
 
     return [this.poolIdentifier];
   }

@@ -177,12 +177,10 @@ export async function testE2E(
     if (!allowanceTx.success) console.log(allowanceTx.tenderlyUrl);
     expect(allowanceTx!.success).toEqual(true);
   }
-
   if (adapterBytecode) {
     const deployTx = await ts.simulate(
       deployAdapterParams(adapterBytecode, network),
     );
-
     expect(deployTx.success).toEqual(true);
     const adapterAddress =
       deployTx.transaction.transaction_info.contract_address;
@@ -207,6 +205,8 @@ export async function testE2E(
     : new LocalParaswapSDK(network, dexKey);
 
   if (paraswap.initializePricing) await paraswap.initializePricing();
+
+  console.log(poolIdentifiers);
 
   const priceRoute = await paraswap.getPrices(
     srcToken,

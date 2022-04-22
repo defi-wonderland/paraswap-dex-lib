@@ -94,6 +94,7 @@ export class PricingHelper {
               });
           });
         } catch (e) {
+          console.log(`Error_${key}_getPoolIdentifiers:`, e);
           this.logger.error(`Error_${key}_getPoolIdentifiers:`, e);
           return [];
         }
@@ -137,6 +138,15 @@ export class PricingHelper {
               );
 
               const dexInstance = this.dexAdapterService.getDexByKey(key);
+
+              console.log({
+                from,
+                to,
+                amounts,
+                side,
+                blockNumber,
+                limitPools: limitPools ? limitPools : undefined,
+              });
 
               dexInstance
                 .getPricesVolume(

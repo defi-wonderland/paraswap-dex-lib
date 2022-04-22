@@ -45,6 +45,8 @@ const amounts = [
 const dexKey = 'IbAmm';
 
 describe('IbAmm', function () {
+  //TODO: check async time -- unrealiable tests
+  //TODO: check difference between constant prices and pool prices
   it('getPoolIdentifiers and getPricesVolume SELL', async function () {
     const dexHelper = new DummyDexHelper(network);
     const blocknumber = await dexHelper.provider.getBlockNumber();
