@@ -204,8 +204,6 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
         : ibammContract.sell_quote;
     const token = side === SwapSide.BUY ? to.address : from.address;
 
-    console.log({ to: to.address, unitAmount });
-
     // const _unit = await quote(token, unitAmount);
     // const unit: bigint = BigInt(await ibammContract.buy_quote(to.address, unitAmount));
 
@@ -224,15 +222,6 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
     console.count('🔴');
     // TODO: fix
     const unit = prices[prices.length - 1];
-
-    console.log({
-      data: {},
-      exchange: this.dexKey,
-      gasCost: 200_000, // TODO: improve
-      prices,
-      unit,
-      poolAddresses: [this.poolIdentifier],
-    });
 
     return [
       {
@@ -278,6 +267,10 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
     side: SwapSide,
   ): Promise<SimpleExchangeParam> {
     const isBuy = side === SwapSide.BUY;
+
+    const swapFunction = isBuy ? IbAmmFunctions.buy : IbAmmFunctions.sell;
+
+    console.log({ side, isBuy });
     const swapFunctionParams: IbAmmParams = [
       isBuy ? destToken : srcToken, // token
       isBuy ? destAmount : srcAmount, // amount
@@ -285,7 +278,7 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
     ];
 
     const swapData = this.exchangeRouterInterface.encodeFunctionData(
-      isBuy ? IbAmmFunctions.buy : IbAmmFunctions.sell,
+      swapFunction,
       swapFunctionParams,
     );
 

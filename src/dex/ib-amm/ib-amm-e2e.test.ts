@@ -78,8 +78,7 @@ describe('IbAmm E2E', () => {
     // TODO: Add any direct swap contractMethod name if it exists
     // TODO: If buy is not supported remove the buy contract methods
 
-    describe(`Simpleswap`, () => {
-      // expect.assertions(3);
+    describe(`simpleBuy`, () => {
       it('DAI -> IBEUR', async () => {
         await testE2E(
           tokens[DAI_SYMBOL],
@@ -87,6 +86,22 @@ describe('IbAmm E2E', () => {
           holders[DAI_SYMBOL],
           DAI_AMOUNT,
           SwapSide.BUY,
+          dexKey,
+          ContractMethod.simpleBuy,
+          network,
+          provider,
+        );
+      });
+    });
+
+    describe.only(`simpleSwap`, () => {
+      it('IBEUR -> MIM', async () => {
+        await testE2E(
+          tokens[IBEUR_SYMBOL],
+          tokens[MIM_SYMBOL],
+          holders[IBEUR_SYMBOL],
+          MIM_AMOUNT,
+          SwapSide.SELL,
           dexKey,
           ContractMethod.simpleSwap,
           network,
