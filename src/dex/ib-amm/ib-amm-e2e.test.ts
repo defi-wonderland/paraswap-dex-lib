@@ -54,6 +54,8 @@ import { JsonRpcProvider } from '@ethersproject/providers';
   (This comment should be removed from the final implementation)
 */
 
+jest.setTimeout(3 * 60 * 1000);
+
 describe('IbAmm E2E', () => {
   describe('IbAmm MAINNET', () => {
     const dexKey = 'ibamm';
@@ -77,6 +79,7 @@ describe('IbAmm E2E', () => {
     // TODO: If buy is not supported remove the buy contract methods
 
     describe(`Simpleswap`, () => {
+      // expect.assertions(3);
       it('DAI -> IBEUR', async () => {
         await testE2E(
           tokens[DAI_SYMBOL],

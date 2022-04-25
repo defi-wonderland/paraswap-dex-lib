@@ -242,7 +242,7 @@ export async function testE2E(
         parseInt(priceRoute.gasCost) - parseInt(swapTx!.gasUsed)
       }`,
     );
-  console.log(`Tenderly URL: ${swapTx!.tenderlyUrl}`);
+  console.log({ swapTx });
 
   expect(swapTx!.success).toEqual(true);
 }
