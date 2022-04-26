@@ -87,8 +87,6 @@ export class LocalParaswapSDK implements IParaSwapSDK {
       [this.dexKey],
       poolIdentifiers,
     );
-    console.log('🥎');
-    console.log({ poolPrices });
     if (!poolPrices || poolPrices.length == 0)
       throw new Error('Fail to get price for ' + this.dexKey);
 
@@ -97,7 +95,6 @@ export class LocalParaswapSDK implements IParaSwapSDK {
     const srcAmount = (
       side === SwapSide.SELL ? amount : quoteAmount
     ).toString();
-    console.log({ srcAmount });
     const destAmount = (
       side === SwapSide.SELL ? quoteAmount : amount
     ).toString();

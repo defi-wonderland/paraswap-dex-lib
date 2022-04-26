@@ -43,7 +43,6 @@ const amounts = [
 const dexKey = 'IbAmm';
 
 describe('IbAmm', function () {
-  //TODO: check async time -- unrealiable tests
   //TODO: check difference between constant prices and pool prices
   it('getPoolIdentifiers and getPricesVolume SELL', async function () {
     const dexHelper = new DummyDexHelper(network);
@@ -80,41 +79,6 @@ describe('IbAmm', function () {
       checkPoolPrices(poolPrices!, amounts, SwapSide.SELL, dexKey);
     }
     console.count('🔥');
-  });
-
-  it('getPoolIdentifiers and getPricesVolume BUY', async function () {
-    const dexHelper = new DummyDexHelper(network);
-    const blocknumber = await dexHelper.provider.getBlockNumber();
-    const ibAmm = new IbAmm(network, dexKey, dexHelper);
-
-    await ibAmm.initializePricing(blocknumber);
-
-    const pools = await ibAmm.getPoolIdentifiers(
-      DAI,
-      IBEUR,
-      SwapSide.BUY,
-      blocknumber,
-    );
-    console.log(`${SYMBOL.DAI} <> ${SYMBOL.IBEUR} Pool Identifiers: `, pools);
-
-    expect(pools.length).toBeGreaterThan(0);
-
-    const poolPrices = await ibAmm.getPricesVolume(
-      DAI,
-      IBEUR,
-      amounts,
-      SwapSide.BUY,
-      blocknumber,
-      pools,
-    );
-    console.log(`${SYMBOL.DAI} <> ${SYMBOL.IBEUR} Pool Prices: `, poolPrices);
-
-    expect(poolPrices).not.toBeNull();
-    if (ibAmm.hasConstantPriceLargeAmounts) {
-      checkConstantPoolPrices(poolPrices!, amounts, dexKey);
-    } else {
-      checkPoolPrices(poolPrices!, amounts, SwapSide.BUY, dexKey);
-    }
   });
 
   it('getTopPoolsForToken', async function () {
