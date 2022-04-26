@@ -232,6 +232,8 @@ export async function testE2E(
 
   const swapTx = await ts.simulate(swapParams);
 
+  //check allowances
+
   console.log(`${srcToken.address}_${destToken.address}_${dexKey!}`);
   // Only log gas estimate if testing against API
   if (useAPI)

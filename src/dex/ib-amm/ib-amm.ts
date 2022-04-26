@@ -185,11 +185,14 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
     if (limitPools && limitPools.every(p => p !== this.poolIdentifier))
       return null;
 
-    if (!this.poolExists(from, to, side)) null;
+    // if (!this.poolExists(from, to, side)) null;
 
-    const unitAmount = BigInt(
-      10 ** (side == SwapSide.BUY ? to.decimals : from.decimals),
-    );
+    // const unitAmount = BigInt(
+    //   10 ** (side == SwapSide.BUY ? to.decimals : from.decimals),
+    // );
+
+    const isBuy = toLC(from.address) === toLC(this.config.DAI);
+    console.log({ isBuy, from: from.address, dai: this.config.DAI });
 
     const provider = new JsonRpcProvider(ProviderURL[Network.MAINNET]);
     const ibammContract = new Contract(
@@ -198,11 +201,9 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
       provider,
     );
 
-    const quote =
-      side === SwapSide.BUY
-        ? ibammContract.buy_quote
-        : ibammContract.sell_quote;
-    const token = side === SwapSide.BUY ? to.address : from.address;
+    const quote = isBuy ? ibammContract.buy_quote : ibammContract.sell_quote;
+
+    const token = isBuy ? to.address : from.address;
 
     // const _unit = await quote(token, unitAmount);
     // const unit: bigint = BigInt(await ibammContract.buy_quote(to.address, unitAmount));
@@ -266,15 +267,15 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
     data: IbAmmData,
     side: SwapSide,
   ): Promise<SimpleExchangeParam> {
-    const isBuy = side === SwapSide.BUY;
+    const isBuy = toLC(srcToken) === toLC(this.config.DAI);
+    console.log({ isBuy, srcToken, dai: this.config.DAI });
 
     const swapFunction = isBuy ? IbAmmFunctions.buy : IbAmmFunctions.sell;
 
-    console.log({ side, isBuy });
     const swapFunctionParams: IbAmmParams = [
       isBuy ? destToken : srcToken, // token
-      isBuy ? destAmount : srcAmount, // amount
-      isBuy ? destAmount : srcAmount, // TODO: minOut --> maybe fijemosno como hace uni con esto
+      srcAmount, // amount
+      '0', // TODO: minOut --> maybe fijemosno como hace uni con esto
     ];
 
     const swapData = this.exchangeRouterInterface.encodeFunctionData(

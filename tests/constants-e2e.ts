@@ -217,6 +217,10 @@ export const Tokens: { [network: number]: { [symbol: string]: Token } } = {
       address: '0x96E61422b6A9bA0e068B6c5ADd4fFaBC6a4aae27',
       decimals: 18,
     },
+    IBAUD: {
+      address: '0xFAFdF0C4c1CB09d430Bf88c75D88BB46DAe09967',
+      decimals: 18,
+    },
   },
   [Network.ROPSTEN]: {
     DAI: {

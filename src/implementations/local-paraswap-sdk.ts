@@ -97,6 +97,7 @@ export class LocalParaswapSDK implements IParaSwapSDK {
     const srcAmount = (
       side === SwapSide.SELL ? amount : quoteAmount
     ).toString();
+    console.log({ srcAmount });
     const destAmount = (
       side === SwapSide.SELL ? quoteAmount : amount
     ).toString();

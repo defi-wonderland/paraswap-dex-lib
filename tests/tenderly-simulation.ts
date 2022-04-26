@@ -62,6 +62,9 @@ export class TenderlySimulation {
         },
       );
       const lastTx = data.simulation.id;
+      console.log(
+        `https://dashboard.tenderly.co/${TENDERLY_ACCOUNT_ID}/${TENDERLY_PROJECT}/fork/${this.forkId}/simulation/${lastTx}`,
+      );
       if (data.transaction.status) {
         this.lastTx = lastTx;
         return {
