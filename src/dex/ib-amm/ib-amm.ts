@@ -187,11 +187,12 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
 
     // if (!this.poolExists(from, to, side)) null;
 
-    // const unitAmount = BigInt(
-    //   10 ** (side == SwapSide.BUY ? to.decimals : from.decimals),
-    // );
-
     const isBuy = toLC(from.address) === toLC(this.config.DAI);
+
+    const token = isBuy ? to : from;
+
+    const unitAmount = BigInt(10 ** token.decimals);
+
     console.log({ isBuy, from: from.address, dai: this.config.DAI });
 
     const provider = new JsonRpcProvider(ProviderURL[Network.MAINNET]);
@@ -203,27 +204,15 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
 
     const quote = isBuy ? ibammContract.buy_quote : ibammContract.sell_quote;
 
-    const token = isBuy ? to.address : from.address;
-
-    // const _unit = await quote(token, unitAmount);
-    // const unit: bigint = BigInt(await ibammContract.buy_quote(to.address, unitAmount));
-
-    // console.log({ prices: await ibammContract.buy_quote(to.address, amounts[1]) })
     console.count('🔴');
 
-    const prices: bigint[] = await Promise.all([
-      ...amounts.map(async amount => BigInt(await quote(token, amount))),
-    ]);
-
-    // const [unit, ...prices] = await Promise.all([
-    //   BigInt(await quote(token, unitAmount)),
-    //   ...amounts.map(async amount => BigInt(await quote(token, amount))),
-    // ]) as bigint[];
+    const [unit, ...prices] = (await Promise.all(
+      [unitAmount, ...amounts].map(async amount =>
+        BigInt(await quote(token.address, amount)),
+      ),
+    )) as bigint[];
 
     console.count('🔴');
-    // TODO: fix
-    const unit = prices[prices.length - 1];
-
     return [
       {
         data: {},

@@ -27,3 +27,14 @@ export const Adapters: {
 } = {
   // TODO: add adapters for each chain
 };
+
+export enum SYMBOL {
+  DAI = 'DAI',
+  IBAUD = 'IBAUD',
+  IBCHF = 'IBCHF',
+  IBEUR = 'IBEUR',
+  IBGBP = 'IBGBP',
+  IBJPY = 'IBJPY',
+  IBKRW = 'IBKRW',
+  MIM = 'MIM',
+}

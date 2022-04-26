@@ -10,6 +10,7 @@ import {
   checkConstantPoolPrices,
 } from '../../../tests/utils';
 import { Tokens } from '../../../tests/constants-e2e';
+import { SYMBOL } from './config';
 
 /*
   README
@@ -27,14 +28,11 @@ import { Tokens } from '../../../tests/constants-e2e';
 */
 
 const network = Network.MAINNET;
-const DAI_SYMBOL = 'DAI';
-const DAI = Tokens[network][DAI_SYMBOL];
+const DAI = Tokens[network][SYMBOL.DAI];
 
-const IBEUR_SYMBOL = 'IBEUR';
-const IBEUR = Tokens[network][IBEUR_SYMBOL];
+const IBEUR = Tokens[network][SYMBOL.IBEUR];
 
-const MIM_SYMBOL = 'MIM';
-const MIM = Tokens[network][MIM_SYMBOL];
+const MIM = Tokens[network][SYMBOL.MIM];
 
 const amounts = [
   BigInt('0'),
@@ -60,7 +58,7 @@ describe('IbAmm', function () {
       SwapSide.SELL,
       blocknumber,
     );
-    console.log(`${IBEUR_SYMBOL} <> ${MIM_SYMBOL} Pool Identifiers: `, pools);
+    console.log(`${SYMBOL.IBEUR} <> ${SYMBOL.MIM} Pool Identifiers: `, pools);
 
     expect(pools.length).toBeGreaterThan(0);
 
@@ -72,7 +70,7 @@ describe('IbAmm', function () {
       blocknumber,
       pools,
     );
-    console.log(`${IBEUR_SYMBOL} <> ${MIM_SYMBOL} Pool Prices: `, poolPrices);
+    console.log(`${SYMBOL.IBEUR} <> ${SYMBOL.MIM} Pool Prices: `, poolPrices);
 
     expect(poolPrices).not.toBeNull();
     if (ibAmm.hasConstantPriceLargeAmounts) {
@@ -97,7 +95,7 @@ describe('IbAmm', function () {
       SwapSide.BUY,
       blocknumber,
     );
-    console.log(`${DAI_SYMBOL} <> ${IBEUR_SYMBOL} Pool Identifiers: `, pools);
+    console.log(`${SYMBOL.DAI} <> ${SYMBOL.IBEUR} Pool Identifiers: `, pools);
 
     expect(pools.length).toBeGreaterThan(0);
 
@@ -109,7 +107,7 @@ describe('IbAmm', function () {
       blocknumber,
       pools,
     );
-    console.log(`${DAI_SYMBOL} <> ${IBEUR_SYMBOL} Pool Prices: `, poolPrices);
+    console.log(`${SYMBOL.DAI} <> ${SYMBOL.IBEUR} Pool Prices: `, poolPrices);
 
     expect(poolPrices).not.toBeNull();
     if (ibAmm.hasConstantPriceLargeAmounts) {
@@ -124,7 +122,7 @@ describe('IbAmm', function () {
     const ibAmm = new IbAmm(network, dexKey, dexHelper);
 
     const poolLiquidity = await ibAmm.getTopPoolsForToken(DAI.address, 10);
-    console.log(`${DAI_SYMBOL} Top Pools:`, poolLiquidity);
+    console.log(`${SYMBOL.DAI} Top Pools:`, poolLiquidity);
 
     if (!ibAmm.hasConstantPriceLargeAmounts) {
       checkPoolsLiquidity(poolLiquidity, DAI.address, dexKey);

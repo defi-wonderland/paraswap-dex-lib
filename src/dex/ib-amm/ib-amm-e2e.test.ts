@@ -14,6 +14,7 @@ import {
   SwapSide,
 } from '../../constants';
 import { JsonRpcProvider } from '@ethersproject/providers';
+import { SYMBOL } from './config';
 
 /*
   README
@@ -65,132 +66,56 @@ describe('IbAmm E2E', () => {
     const provider = new JsonRpcProvider(ProviderURL[network]);
 
     // TODO: Modify the tokenASymbol, tokenBSymbol, tokenAAmount;
-    const DAI_SYMBOL: string = 'DAI';
-    const MIM_SYMBOL: string = 'MIM';
-    const IBEUR_SYMBOL: string = 'IBEUR';
-    const IBAUD_SYMBOL: string = 'IBAUD';
-    const NATIVE_TOKEN_SYMBOL = NativeTokenSymbols[network];
 
     const TOKEN_AMOUNT: string = '1000000000000000000';
 
     // TODO: Add any direct swap contractMethod name if it exists
     // TODO: If buy is not supported remove the buy contract methods
 
-    describe(`simpleBuy`, () => {
-      it('DAI -> IBAUD', async () => {
-        await testE2E(
-          tokens[DAI_SYMBOL],
-          tokens[IBEUR_SYMBOL],
-          holders[DAI_SYMBOL],
-          TOKEN_AMOUNT,
-          SwapSide.SELL,
-          dexKey,
-          ContractMethod.simpleSwap,
-          network,
-          provider,
-        );
-      });
+    const SYMBOLS = [
+      SYMBOL.IBAUD,
+      SYMBOL.IBCHF,
+      SYMBOL.IBEUR,
+      SYMBOL.IBGBP,
+      SYMBOL.IBJPY,
+      SYMBOL.IBKRW,
+    ];
 
-      it('DAI -> IBEUR', async () => {
-        await testE2E(
-          tokens[DAI_SYMBOL],
-          tokens[IBEUR_SYMBOL],
-          holders[DAI_SYMBOL],
-          TOKEN_AMOUNT,
-          SwapSide.SELL,
-          dexKey,
-          ContractMethod.simpleSwap,
-          network,
-          provider,
-        );
+    describe(`buy`, () => {
+      SYMBOLS.forEach(symbol => {
+        it(`DAI -> ${symbol}`, async () => {
+          await testE2E(
+            tokens[SYMBOL.DAI],
+            tokens[symbol],
+            holders[SYMBOL.DAI],
+            TOKEN_AMOUNT,
+            SwapSide.SELL,
+            dexKey,
+            ContractMethod.simpleSwap,
+            network,
+            provider,
+          );
+        });
       });
-
-      it('DAI -> IBEUR', async () => {
-        await testE2E(
-          tokens[DAI_SYMBOL],
-          tokens[IBEUR_SYMBOL],
-          holders[DAI_SYMBOL],
-          TOKEN_AMOUNT,
-          SwapSide.SELL,
-          dexKey,
-          ContractMethod.simpleSwap,
-          network,
-          provider,
-        );
-      });
-
-      it('DAI -> IBEUR', async () => {
-        await testE2E(
-          tokens[DAI_SYMBOL],
-          tokens[IBEUR_SYMBOL],
-          holders[DAI_SYMBOL],
-          TOKEN_AMOUNT,
-          SwapSide.SELL,
-          dexKey,
-          ContractMethod.simpleSwap,
-          network,
-          provider,
-        );
-      });
-
-      it('DAI -> IBEUR', async () => {
-        await testE2E(
-          tokens[DAI_SYMBOL],
-          tokens[IBEUR_SYMBOL],
-          holders[DAI_SYMBOL],
-          TOKEN_AMOUNT,
-          SwapSide.SELL,
-          dexKey,
-          ContractMethod.simpleSwap,
-          network,
-          provider,
-        );
-      });
-
-      it('DAI -> IBEUR', async () => {
-        await testE2E(
-          tokens[DAI_SYMBOL],
-          tokens[IBEUR_SYMBOL],
-          holders[DAI_SYMBOL],
-          TOKEN_AMOUNT,
-          SwapSide.SELL,
-          dexKey,
-          ContractMethod.simpleSwap,
-          network,
-          provider,
-        );
-      });
-
-      // it('DAI -> IBAUD', async () => {
-      //   await testE2E(
-      //     tokens[DAI_SYMBOL],
-      //     tokens[IBAUD_SYMBOL],
-      //     holders[DAI_SYMBOL],
-      //     DAI_AMOUNT,
-      //     SwapSide.BUY,
-      //     dexKey,
-      //     ContractMethod.simpleBuy,
-      //     network,
-      //     provider,
-      //   );
-      // });
     });
 
-    // describe(`simpleSwap`, () => {
-    //   it('IBEUR -> MIM', async () => {
-    //     await testE2E(
-    //       tokens[IBEUR_SYMBOL],
-    //       tokens[MIM_SYMBOL],
-    //       holders[IBEUR_SYMBOL],
-    //       MIM_AMOUNT,
-    //       SwapSide.SELL,
-    //       dexKey,
-    //       ContractMethod.simpleSwap,
-    //       network,
-    //       provider,
-    //     );
-    //   });
-    // });
+    describe(`sell`, () => {
+      SYMBOLS.forEach(symbol => {
+        it(`${symbol} -> MIM`, async () => {
+          await testE2E(
+            tokens[symbol],
+            tokens[SYMBOL.MIM],
+            holders[symbol],
+            TOKEN_AMOUNT,
+            SwapSide.SELL,
+            dexKey,
+            ContractMethod.simpleSwap,
+            network,
+            provider,
+          );
+        });
+      });
+    });
   });
 });
 // TODO: Add any aditional test cases required to test IbAmm
