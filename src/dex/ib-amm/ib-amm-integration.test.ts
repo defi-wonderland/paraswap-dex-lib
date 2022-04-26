@@ -12,21 +12,6 @@ import {
 import { Tokens } from '../../../tests/constants-e2e';
 import { SYMBOL } from './config';
 
-/*
-  README
-  ======
-
-  This test script adds tests for IbAmm general integration
-  with the DEX interface. The test cases below are example tests.
-  It is recommended to add tests which cover IbAmm specific
-  logic.
-
-  You can run this individual test script by running:
-  `npx jest src/dex/ib-amm/ib-amm-integration.test.ts`
-
-  (This comment should be removed from the final implementation)
-*/
-
 const network = Network.MAINNET;
 const DAI = Tokens[network][SYMBOL.DAI];
 
@@ -43,7 +28,6 @@ const amounts = [
 const dexKey = 'IbAmm';
 
 describe('IbAmm', function () {
-  //TODO: check difference between constant prices and pool prices
   it('getPoolIdentifiers and getPricesVolume SELL', async function () {
     const dexHelper = new DummyDexHelper(network);
     const blocknumber = await dexHelper.provider.getBlockNumber();
@@ -73,12 +57,10 @@ describe('IbAmm', function () {
 
     expect(poolPrices).not.toBeNull();
     if (ibAmm.hasConstantPriceLargeAmounts) {
-      console.count('🔥');
       checkConstantPoolPrices(poolPrices!, amounts, dexKey);
     } else {
       checkPoolPrices(poolPrices!, amounts, SwapSide.SELL, dexKey);
     }
-    console.count('🔥');
   });
 
   it('getTopPoolsForToken', async function () {
