@@ -62,9 +62,7 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
     return true;
   }
 
-  private getQuote({ srcTokenAddress }: { srcTokenAddress: string }) {
-    const isBuy = toLC(srcTokenAddress) === toLC(this.config.DAI);
-
+  private getQuote(isBuy: boolean) {
     const provider = new JsonRpcProvider(ProviderURL[Network.MAINNET]);
 
     const ibammContract = new Contract(
@@ -120,7 +118,7 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
 
     const unitAmount = BigInt(10 ** token.decimals);
 
-    const quote = this.getQuote({ srcTokenAddress: srcToken.address });
+    const quote = this.getQuote(isBuy);
 
     const [unit, ...prices] = (await Promise.all(
       [unitAmount, ...amounts].map(async amount =>
@@ -181,7 +179,7 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
 
     const isBuy = toLC(srcTokenAddress) === toLC(this.config.DAI);
     const tokenAddress = isBuy ? destTokenAddress : srcTokenAddress;
-    const quote = this.getQuote({ srcTokenAddress });
+    const quote = this.getQuote(isBuy);
     const quotedAmount = (await quote(tokenAddress, srcAmount)) as string;
     const minOut = (BigInt(quotedAmount) * BigInt(97)) / BigInt(100);
 
