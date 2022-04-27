@@ -45,20 +45,32 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
   }
 
   private poolExists(from: Token, to: Token): boolean {
-    const { IB_TOKENS } = this.config;
-    const isBuy = toLC(from.address) === toLC(this.config.DAI);
+    const { IB_TOKENS, DAI, MIM } = this.config;
+    const isBuy = toLC(from.address) === toLC(DAI);
 
     if (toLC(from.address) === toLC(to.address)) return false;
 
     if (isBuy) {
       if (IB_TOKENS.every(a => toLC(a) !== toLC(to.address))) return false;
     } else {
-      if (toLC(to.address) !== toLC(this.config.MIM)) return false;
+      if (toLC(to.address) !== toLC(MIM)) return false;
 
       if (IB_TOKENS.every(a => toLC(a) !== toLC(from.address))) return false;
     }
 
     return true;
+  }
+
+  private getQuote({ srcTokenAddress }: { srcTokenAddress: string }) {
+    const { DAI, IBAMM_ADDRESS } = this.config;
+
+    const isBuy = toLC(srcTokenAddress) === toLC(DAI);
+
+    const provider = new JsonRpcProvider(ProviderURL[Network.MAINNET]);
+
+    const ibammContract = new Contract(IBAMM_ADDRESS, IBAmmRouterABI, provider);
+
+    return isBuy ? ibammContract.buy_quote : ibammContract.sell_quote;
   }
 
   async initializePricing(blockNumber: number) {}
@@ -67,44 +79,46 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
     return null;
   }
 
+  /**
+   * Ib-amm doesn't have pools, instead it's just a single contract with two functions, buy and sell.
+   *
+   * - When buy is called, the caller transfers DAI to the contract and the contract borrows
+   * the caller's desired ibToken to give to the caller.
+   *
+   * - When sell is called, the caller transfers an ibToken to the contract and the contract mints MIM to the caller.
+   * Therefore, the "pool" in this case will always be the ib-amm's contract address
+   */
   async getPoolIdentifiers(
-    from: Token,
-    to: Token,
+    srcToken: Token,
+    destToken: Token,
     side: SwapSide,
     blockNumber: number,
   ): Promise<string[]> {
-    if (!this.poolExists(from, to)) [];
+    if (!this.poolExists(srcToken, destToken)) [];
 
     return [this.poolIdentifier];
   }
 
   async getPricesVolume(
-    from: Token,
-    to: Token,
+    srcToken: Token,
+    destToken: Token,
     amounts: bigint[],
     side: SwapSide,
-    blockNumber: number, // used on this.eventPools
+    blockNumber: number,
     limitPools?: string[],
   ): Promise<null | ExchangePrices<IbAmmData>> {
     if (limitPools && limitPools.every(p => p !== this.poolIdentifier))
       return null;
 
-    if (!this.poolExists(from, to)) null;
+    if (!this.poolExists(srcToken, destToken)) null;
 
-    const isBuy = toLC(from.address) === toLC(this.config.DAI);
+    const isBuy = toLC(srcToken.address) === toLC(this.config.DAI);
 
-    const token = isBuy ? to : from;
+    const token = isBuy ? destToken : srcToken;
 
     const unitAmount = BigInt(10 ** token.decimals);
 
-    const provider = new JsonRpcProvider(ProviderURL[Network.MAINNET]);
-    const ibammContract = new Contract(
-      this.config.IBAMM_ADDRESS,
-      IBAmmRouterABI,
-      provider,
-    );
-
-    const quote = isBuy ? ibammContract.buy_quote : ibammContract.sell_quote;
+    const quote = this.getQuote({ srcTokenAddress: srcToken.address });
 
     const [unit, ...prices] = (await Promise.all(
       [unitAmount, ...amounts].map(async amount =>
@@ -116,7 +130,7 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
       {
         data: {},
         exchange: this.dexKey,
-        gasCost: 200_000, // TODO: improve
+        gasCost: 200_000,
         prices,
         unit,
         poolAddresses: [this.poolIdentifier],
@@ -140,22 +154,42 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
   }
 
   async getSimpleParam(
-    srcToken: string,
-    destToken: string,
+    srcTokenAddress: string,
+    destTokenAddress: string,
     srcAmount: string,
     destAmount: string,
     data: IbAmmData,
     side: SwapSide,
   ): Promise<SimpleExchangeParam> {
-    const isBuy = toLC(srcToken) === toLC(this.config.DAI);
+    /**
+     * # swapFunctionParams
+     *
+     * There are two cases: buy and sell.
+     *
+     * - When the function is a buy, the operation goes from DAI --> any ibToken.
+     * In ib-amm, the function buy takes in (ibTokenAddress, amountOfDAIToSwap, minAmountOut).
+     * The minAmountOut is calculated calling buy_quote with ibTokenAddress and amountOFDAIToSwap,
+     * and multiplying the result by 0.97.
+     *
+     * - When the function is sell, the operation goes from ibToken --> MIM.
+     * In ib-amm, the function sell takes in (ibTokenAddress, amountOfIbTokenToSwap, minAmountOut).
+     * The minAmountOut is calculated by calling sell_quoute with ibTokenAddress and amountOfIbTokenToSwap,
+     * and  multiplying the result by 0.97.
+     */
 
-    const swapFunction = isBuy ? IbAmmFunctions.buy : IbAmmFunctions.sell;
+    const isBuy = toLC(srcTokenAddress) === toLC(this.config.DAI);
+    const tokenAddress = isBuy ? destTokenAddress : srcTokenAddress;
+    const quote = this.getQuote({ srcTokenAddress });
+    const quotedAmount = (await quote(tokenAddress, srcAmount)) as string;
+    const minOut = (BigInt(quotedAmount) * BigInt(97)) / BigInt(100);
 
     const swapFunctionParams: IbAmmParams = [
-      isBuy ? destToken : srcToken, // token
-      srcAmount, // amount
-      '0', // TODO: minOut --> maybe fijemosno como hace uni con esto
+      isBuy ? destTokenAddress : srcTokenAddress,
+      srcAmount,
+      minOut.toString(),
     ];
+
+    const swapFunction = isBuy ? IbAmmFunctions.buy : IbAmmFunctions.sell;
 
     const swapData = this.exchangeRouterInterface.encodeFunctionData(
       swapFunction,
@@ -163,9 +197,9 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
     );
 
     return this.buildSimpleParamWithoutWETHConversion(
-      srcToken,
+      srcTokenAddress,
       srcAmount,
-      destToken,
+      destTokenAddress,
       destAmount,
       swapData,
       this.config.IBAMM_ADDRESS,
