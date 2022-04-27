@@ -412,7 +412,6 @@ export class BalancerV2
     side: SwapSide,
     blockNumber: number,
   ): Promise<string[]> {
-    console.log('🚩');
     if (side === SwapSide.BUY) return [];
     const _from = wrapETH(from, this.network);
     const _to = wrapETH(to, this.network);

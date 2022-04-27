@@ -1,6 +1,6 @@
 import { DexParams } from './types';
 import { DexConfigMap } from '../../types';
-import { Network, SwapSide } from '../../constants';
+import { Network } from '../../constants';
 
 export const IbAmmConfig: DexConfigMap<DexParams> = {
   IbAmm: {
@@ -24,9 +24,7 @@ export const Adapters: {
   [chainId: number]: {
     [side: string]: { name: string; index: number }[] | null;
   };
-} = {
-  // TODO: add adapters for each chain
-};
+} = {};
 
 export enum SYMBOL {
   DAI = 'DAI',

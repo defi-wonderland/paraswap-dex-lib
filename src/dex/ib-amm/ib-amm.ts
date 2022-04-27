@@ -45,30 +45,33 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
   }
 
   private poolExists(from: Token, to: Token): boolean {
-    const { IB_TOKENS, DAI, MIM } = this.config;
-    const isBuy = toLC(from.address) === toLC(DAI);
+    const isBuy = toLC(from.address) === toLC(this.config.DAI);
 
     if (toLC(from.address) === toLC(to.address)) return false;
 
     if (isBuy) {
-      if (IB_TOKENS.every(a => toLC(a) !== toLC(to.address))) return false;
+      if (this.config.IB_TOKENS.every(a => toLC(a) !== toLC(to.address)))
+        return false;
     } else {
-      if (toLC(to.address) !== toLC(MIM)) return false;
+      if (toLC(to.address) !== toLC(this.config.MIM)) return false;
 
-      if (IB_TOKENS.every(a => toLC(a) !== toLC(from.address))) return false;
+      if (this.config.IB_TOKENS.every(a => toLC(a) !== toLC(from.address)))
+        return false;
     }
 
     return true;
   }
 
   private getQuote({ srcTokenAddress }: { srcTokenAddress: string }) {
-    const { DAI, IBAMM_ADDRESS } = this.config;
-
-    const isBuy = toLC(srcTokenAddress) === toLC(DAI);
+    const isBuy = toLC(srcTokenAddress) === toLC(this.config.DAI);
 
     const provider = new JsonRpcProvider(ProviderURL[Network.MAINNET]);
 
-    const ibammContract = new Contract(IBAMM_ADDRESS, IBAmmRouterABI, provider);
+    const ibammContract = new Contract(
+      this.config.IBAMM_ADDRESS,
+      IBAmmRouterABI,
+      provider,
+    );
 
     return isBuy ? ibammContract.buy_quote : ibammContract.sell_quote;
   }
@@ -82,8 +85,7 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
   /**
    * Ib-amm doesn't have pools, instead it's just a single contract with two functions, buy and sell.
    *
-   * - When buy is called, the caller transfers DAI to the contract and the contract borrows
-   * the caller's desired ibToken to give to the caller.
+   * - When buy is called, the caller transfers DAI to the contract and the contract borrows the caller's desired ibToken to give to the caller.
    *
    * - When sell is called, the caller transfers an ibToken to the contract and the contract mints MIM to the caller.
    * Therefore, the "pool" in this case will always be the ib-amm's contract address

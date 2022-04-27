@@ -177,10 +177,12 @@ export async function testE2E(
     if (!allowanceTx.success) console.log(allowanceTx.tenderlyUrl);
     expect(allowanceTx!.success).toEqual(true);
   }
+
   if (adapterBytecode) {
     const deployTx = await ts.simulate(
       deployAdapterParams(adapterBytecode, network),
     );
+
     expect(deployTx.success).toEqual(true);
     const adapterAddress =
       deployTx.transaction.transaction_info.contract_address;
@@ -199,7 +201,6 @@ export async function testE2E(
   }
 
   const useAPI = testingEndpoint && !poolIdentifiers;
-
   // The API currently doesn't allow for specifying poolIdentifiers
   const paraswap: IParaSwapSDK = useAPI
     ? new APIParaswapSDK(network, dexKey)
@@ -215,7 +216,6 @@ export async function testE2E(
     contractMethod,
     poolIdentifiers,
   );
-
   expect(parseFloat(priceRoute.destAmount)).toBeGreaterThan(0);
 
   // Slippage to be 7%
@@ -223,7 +223,6 @@ export async function testE2E(
     (swapSide === SwapSide.SELL
       ? BigInt(priceRoute.destAmount) * BigInt(93)
       : BigInt(priceRoute.srcAmount) * BigInt(107)) / BigInt(100);
-
   const swapParams = await paraswap.buildTransaction(
     priceRoute,
     minMaxAmount,
@@ -231,9 +230,6 @@ export async function testE2E(
   );
 
   const swapTx = await ts.simulate(swapParams);
-
-  //check allowances
-
   console.log(`${srcToken.address}_${destToken.address}_${dexKey!}`);
   // Only log gas estimate if testing against API
   if (useAPI)
@@ -244,6 +240,6 @@ export async function testE2E(
         parseInt(priceRoute.gasCost) - parseInt(swapTx!.gasUsed)
       }`,
     );
-
+  console.log(`Tenderly URL: ${swapTx!.tenderlyUrl}`);
   expect(swapTx!.success).toEqual(true);
 }
