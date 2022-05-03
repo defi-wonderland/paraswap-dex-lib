@@ -12,13 +12,14 @@ import { SwapSide, Network, ProviderURL } from '../../constants';
 import { getDexKeysWithNetwork } from '../../utils';
 import { IDex } from '../../dex/idex';
 import { IDexHelper } from '../../dex-helper/idex-helper';
-import { IbAmmData, IbAmmFunctions, IbAmmParams, PoolState } from './types';
+import { IbAmmData, IbAmmFunctions, IbAmmParams } from './types';
 import { SimpleExchange } from '../simple-exchange';
 import { IbAmmConfig, Adapters } from './config';
 import IBAmmRouterABI from '../../abi/ib-amm/ib-amm.json';
 import { toLC } from './utils';
 import { JsonRpcProvider } from '@ethersproject/providers';
 import { Contract } from '@ethersproject/contracts';
+import { IbAmmPool } from './pool';
 
 export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
   readonly hasConstantPriceLargeAmounts = false;
@@ -50,12 +51,20 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
     if (toLC(from.address) === toLC(to.address)) return false;
 
     if (isBuy) {
-      if (this.config.IB_TOKENS.every(a => toLC(a) !== toLC(to.address)))
+      if (
+        this.config.IB_TOKENS.every(
+          ({ TOKEN_ADDRESS }) => toLC(TOKEN_ADDRESS) !== toLC(to.address),
+        )
+      )
         return false;
     } else {
       if (toLC(to.address) !== toLC(this.config.MIM)) return false;
 
-      if (this.config.IB_TOKENS.every(a => toLC(a) !== toLC(from.address)))
+      if (
+        this.config.IB_TOKENS.every(
+          ({ TOKEN_ADDRESS }) => toLC(TOKEN_ADDRESS) !== toLC(from.address),
+        )
+      )
         return false;
     }
 
@@ -63,7 +72,7 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
   }
 
   private getQuote(isBuy: boolean) {
-    const provider = new JsonRpcProvider(ProviderURL[Network.MAINNET]);
+    const { provider } = this.dexHelper;
 
     const ibammContract = new Contract(
       this.config.IBAMM_ADDRESS,
@@ -74,7 +83,21 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
     return isBuy ? ibammContract.buy_quote : ibammContract.sell_quote;
   }
 
-  async initializePricing(blockNumber: number) {}
+  async initializePricing(blockNumber: number) {
+    const { IB_TOKENS } = this.config;
+    const pool = new IbAmmPool(
+      this.dexKey,
+      this.network,
+      this.poolIdentifier,
+      IB_TOKENS,
+      this.dexHelper,
+    );
+    this.dexHelper.blockManager.subscribeToLogs(
+      pool,
+      pool.addressesSubscribed,
+      blockNumber,
+    );
+  }
 
   getAdapters(side: SwapSide): { name: string; index: number }[] | null {
     return null;
