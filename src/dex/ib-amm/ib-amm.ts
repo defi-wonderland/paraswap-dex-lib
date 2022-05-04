@@ -8,17 +8,20 @@ import {
   PoolLiquidity,
   Logger,
 } from '../../types';
-import { SwapSide, Network, ProviderURL } from '../../constants';
+import { SwapSide, Network } from '../../constants';
 import { getDexKeysWithNetwork } from '../../utils';
 import { IDex } from '../../dex/idex';
 import { IDexHelper } from '../../dex-helper/idex-helper';
-import { IbAmmData, IbAmmFunctions, IbAmmParams } from './types';
+import {
+  IbAmmData,
+  IbAmmFunctions,
+  IbAmmParams,
+  IbAmmPoolState,
+} from './types';
 import { SimpleExchange } from '../simple-exchange';
 import { IbAmmConfig, Adapters } from './config';
 import IBAmmRouterABI from '../../abi/ib-amm/ib-amm.json';
 import { toLC } from './utils';
-import { JsonRpcProvider } from '@ethersproject/providers';
-import { Contract } from '@ethersproject/contracts';
 import { IbAmmPool } from './pool';
 
 export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
@@ -31,6 +34,8 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
   logger: Logger;
   exchangeRouterInterface: Interface;
   poolIdentifier: string;
+
+  protected eventPools?: { [poolAddress: string]: IbAmmPool };
 
   constructor(
     protected network: Network,
@@ -71,20 +76,36 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
     return true;
   }
 
-  private getQuote(isBuy: boolean) {
-    const { provider } = this.dexHelper;
+  private computePrices(
+    ibTokenAddress: Address,
+    feedDecimals: number,
+    amounts: bigint[],
+    state: IbAmmPoolState,
+    isBuy: boolean,
+  ): bigint[] {
+    const ibTokenPrice = state.chainlink[ibTokenAddress].answer;
+    const formattedPrice = ibTokenPrice * BigInt(10 ** (18 - feedDecimals));
 
-    const ibammContract = new Contract(
-      this.config.IBAMM_ADDRESS,
-      IBAmmRouterABI,
-      provider,
-    );
+    const prices = amounts.map(a => {
+      const fee = (a * BigInt(3)) / BigInt(1000);
 
-    return isBuy ? ibammContract.buy_quote : ibammContract.sell_quote;
+      if (isBuy) {
+        return ((a - fee) * BigInt(1e18)) / formattedPrice;
+      }
+
+      return ((a - fee) * formattedPrice) / BigInt(1e18);
+    });
+
+    console.log({ prices });
+
+    return prices;
   }
 
   async initializePricing(blockNumber: number) {
     const { IB_TOKENS } = this.config;
+
+    const eventPools: { [poolAddress: string]: IbAmmPool } = {};
+
     const pool = new IbAmmPool(
       this.dexKey,
       this.network,
@@ -92,6 +113,10 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
       IB_TOKENS,
       this.dexHelper,
     );
+
+    eventPools[this.poolIdentifier] = pool;
+    this.eventPools = eventPools;
+
     this.dexHelper.blockManager.subscribeToLogs(
       pool,
       pool.addressesSubscribed,
@@ -141,17 +166,32 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
 
     const unitAmount = BigInt(10 ** token.decimals);
 
-    const quote = this.getQuote(isBuy);
+    const { FEED_DECIMALS } = this.config.IB_TOKENS.find(
+      ({ TOKEN_ADDRESS }) => TOKEN_ADDRESS === token.address,
+    )!;
 
-    const [unit, ...prices] = (await Promise.all(
-      [unitAmount, ...amounts].map(async amount =>
-        BigInt(await quote(token.address, amount)),
-      ),
-    )) as bigint[];
+    let state = this.eventPools![this.poolIdentifier].getState(blockNumber)!;
+
+    if (!state) {
+      state = await this.eventPools![this.poolIdentifier].generateState(
+        blockNumber,
+      );
+      this.eventPools![this.poolIdentifier].setState(state, blockNumber);
+    }
+
+    const [unit, ...prices] = this.computePrices(
+      token.address,
+      FEED_DECIMALS,
+      [unitAmount, ...amounts],
+      state,
+      isBuy,
+    );
 
     return [
       {
-        data: {},
+        data: {
+          unitPrice: unit,
+        },
         exchange: this.dexKey,
         gasCost: 200_000,
         prices,
@@ -199,12 +239,10 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
      * The minAmountOut is calculated by calling sell_quoute with ibTokenAddress and amountOfIbTokenToSwap,
      * and  multiplying the result by 0.97.
      */
-
     const isBuy = toLC(srcTokenAddress) === toLC(this.config.DAI);
-    const tokenAddress = isBuy ? destTokenAddress : srcTokenAddress;
-    const quote = this.getQuote(isBuy);
-    const quotedAmount = (await quote(tokenAddress, srcAmount)) as string;
-    const minOut = (BigInt(quotedAmount) * BigInt(97)) / BigInt(100);
+
+    const quotedAmount = (data.unitPrice * BigInt(srcAmount)) / BigInt(1e18);
+    const minOut = (quotedAmount * BigInt(97)) / BigInt(100);
 
     const swapFunctionParams: IbAmmParams = [
       isBuy ? destTokenAddress : srcTokenAddress,

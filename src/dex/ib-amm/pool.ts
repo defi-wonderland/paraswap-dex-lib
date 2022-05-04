@@ -1,16 +1,5 @@
 import { DeepReadonly } from 'ts-essentials';
-import {
-  ComposedEventSubscriber,
-  PartialEventSubscriber,
-} from '../../composed-event-subscriber';
-import {
-  Address,
-  BlockHeader,
-  Log,
-  Logger,
-  MultiCallInput,
-  MultiCallOutput,
-} from '../../types';
+import { ComposedEventSubscriber } from '../../composed-event-subscriber';
 import { lens } from '../../lens';
 import { ChainLinkSubscriber } from '../../lib/chainlink';
 import { IDexHelper } from '../../dex-helper/idex-helper';

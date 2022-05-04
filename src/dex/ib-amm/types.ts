@@ -1,11 +1,13 @@
 import { ChainLinkState } from '../../lib/chainlink';
-import { Address, NumberAsString } from '../../types';
+import { NumberAsString } from '../../types';
 
 export type IbAmmPoolState = {
   chainlink: { [underlyingAddress: string]: ChainLinkState };
 };
 
-export type IbAmmData = {};
+export type IbAmmData = {
+  unitPrice: bigint;
+};
 
 export type IbAmmParams = [
   token: string,
@@ -21,6 +23,7 @@ export enum IbAmmFunctions {
 export type IbTokensInfo = {
   TOKEN_ADDRESS: string;
   FEED_ADDRESS: string;
+  FEED_DECIMALS: number;
   AGGREGATOR_ADDRESS: string;
   TOKEN_SYMBOL: string;
 };
