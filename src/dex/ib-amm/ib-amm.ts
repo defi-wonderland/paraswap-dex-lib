@@ -96,8 +96,6 @@ export class IbAmm extends SimpleExchange implements IDex<IbAmmData> {
       return ((a - fee) * formattedPrice) / BigInt(1e18);
     });
 
-    console.log({ prices });
-
     return prices;
   }
 
